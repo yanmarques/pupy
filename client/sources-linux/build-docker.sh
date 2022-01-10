@@ -21,10 +21,12 @@ $PIP_INSTALL pip
 $PIP_INSTALL setuptools cython wheel
 $PIP_INSTALL -q six packaging appdirs
 
-CC=/gccwrap CFLAGS_ABORT="-D_FORTIFY_SOURCE=2 -fstack-protector" \
+# CC=/gccwrap
+CFLAGS_ABORT="-D_FORTIFY_SOURCE=2 -fstack-protector" \
     $PIP_INSTALL -q pynacl --no-binary :all:
 
-CC=/gccwrap CFLAGS_FILTER="-Wno-error=sign-conversion" \
+# CC=/gccwrap
+CFLAGS_FILTER="-Wno-error=sign-conversion" \
     CFLAGS="$CFLAGS -DHEADER_UI_H -D__builtin_unreachable=abort" \
         $PIP_INSTALL -q cryptography --no-binary :all:
 
@@ -88,7 +90,7 @@ if [ "$TOOLCHAIN_ARCH" == "x86" ]; then
 
 # It may not be possible to build pyuv with linux32 toolchain, because woody don't have epoll() wrapper yet
 # So make an exception
-    CC=/gccwrap LDSHARED=/gccwrap \
+    # CC=/gccwrap LDSHARED=/gccwrap \
     LDFLAGS="--shared -Os -L/opt/static -static-libgcc -Wl,--allow-shlib-undefined" \
         CFLAGS_FILTER="-D_FILE_OFFSET_BITS=64 -Wl,--no-undefined" CFLAGS="$CFLAGS_PYUV" \
         $PIP_INSTALL https://github.com/alxchk/pyuv/archive/v1.x.zip --no-binary :all:
@@ -115,8 +117,8 @@ zip -y -r -9 ${TEMPLATES}/linux-${TOOLCHAIN_ARCH}.zip . \
     -x "idlelib/*" -x "lib-tk/*" -x "tk*" -x "tcl*" >/dev/null
 
 cd /usr/lib
-zip -9 ${TEMPLATES}/linux-${TOOLCHAIN_ARCH}.zip \
-    libpq.so libodbc.so psqlodbcw.so libodbcinst.so libmaodbc.so
+# zip -9 ${TEMPLATES}/linux-${TOOLCHAIN_ARCH}.zip \
+#     libpq.so libodbc.so psqlodbcw.so libodbcinst.so libmaodbc.so
 
 ldconfig
 
@@ -136,8 +138,8 @@ x86)
     ;;
 
 *)
-    LIBS="LIBSSL=/usr/lib/libssl.so LIBCRYPTO=/usr/lib/libcrypto.so"
-    LIBS="$LIBS LIBPYTHON=/usr/lib/libpython2.7.so"
+    LIBS="LIBSSL=/usr/lib/x86_64-linux-gnu/libssl.so.1.1 LIBCRYPTO=/usr/lib/x86_64-linux-gnu/libcrypto.so.1.1"
+    LIBS="$LIBS LIBPYTHON=/usr/lib/x86_64-linux-gnu/libpython2.7.so"
     MAKEFLAGS="MACH=${TOOLCHAIN_ARCH} $LIBS"
     TARGETS="pupy${TOOLCHAIN_ARCH}d.lin pupy${TOOLCHAIN_ARCH}d.lin.so"
     TARGTS="$TARGETS pupy${TOOLCHAIN_ARCH}.lin pupy${TOOLCHAIN_ARCH}.lin.so"
