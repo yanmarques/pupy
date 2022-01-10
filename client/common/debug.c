@@ -17,7 +17,7 @@ int dprint(const char *fmt, ...) {
     return n;
 }
 
-int dwprint(const wchar_t *fmt, ...) {
+int dwprint(const unsigned int *fmt, ...) {
     va_list args;
     int n;
     FILE *log = stdout;

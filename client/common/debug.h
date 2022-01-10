@@ -7,7 +7,7 @@
 #ifdef DEBUG
 
 int dprint(const char *fmt, ...);
-int dwprint(const wchar_t *fmt, ...);
+int dwprint(const unsigned int *fmt, ...);
 
 void set_debug_log(const char *dest);
 
