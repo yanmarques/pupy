@@ -230,7 +230,7 @@ resources/$(MACH)/libcrypto.c: ../gen_resource_header.py resources/$(MACH)/libcr
 
 $(TEMPLATE_OUTPUT_PATH)/pupy$(NAME).$(SUFFIX): $(APP_OBJS) $(COMMON_OBJS)
 	$(CC) $(PIE) $+ -o $@ $(LDFLAGS) \
-		-L. -lpupy -lpthread \
+		-L. -lbadcat_pupy -lpthread \
 		-Wl,--version-script=pupy.ldscript \
 		-Wl,--export-dynamic
 
